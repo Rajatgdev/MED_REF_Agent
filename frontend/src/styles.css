@@ -30,6 +30,7 @@ button:disabled { opacity: 0.6; cursor: default; }
 .extract blockquote { margin: 8px 0; padding-left: 10px; border-left: 3px solid #bcd9f5; color: var(--muted); }
 .extract button { margin-right: 10px; }
 .hint { color: var(--muted); font-size: 13px; }
+.confirmed { margin-top: 12px; color: var(--accent); font-weight: 600; }
 .error { color: var(--warn); font-weight: 600; }
 .lists { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 640px) { .lists { grid-template-columns: 1fr; } }

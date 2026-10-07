@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
-import { getSpecialties, getRank, extractReferral } from "./lib/api";
+import { getSpecialties, getRank, flowStart, flowResume } from "./lib/api";
 
-// Phase 0-2 UI. Step 1: upload/paste a referral, extract the STATED specialty,
-// GP confirms (or picks manually — the GP always decides). Step 2: origin + mode.
-// Wait and travel are shown SEPARATELY (no combined score). Missing wait = "missing",
+// Phase 0-3b UI. Step 1: upload/paste a referral -> start the LangGraph flow ->
+// GP confirms at the gate (or picks manually). Step 2: origin + mode -> ranked lists.
+// Wait and travel shown SEPARATELY (no combined score). Missing wait = "missing",
 // uncomputed travel = "unavailable" — never 0.
 
 function waitLabel(h) {
@@ -41,12 +41,15 @@ export default function App() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
 
-  // extraction (Phase 2)
+  // flow (Phase 3)
   const [refText, setRefText] = useState("");
   const [refFile, setRefFile] = useState(null);
   const [extracting, setExtracting] = useState(false);
-  const [extract, setExtract] = useState(null);
-  const [extractError, setExtractError] = useState("");
+  const [threadId, setThreadId] = useState(null);
+  const [proposal, setProposal] = useState(null);
+  const [manualPick, setManualPick] = useState("");
+  const [confirmed, setConfirmed] = useState(null);   // {display_name, source}
+  const [flowError, setFlowError] = useState("");
 
   useEffect(() => {
     getSpecialties().then(setSpecialties).catch((e) => setError(e.message));
@@ -65,24 +68,43 @@ export default function App() {
 
   const onExtract = async () => {
     if (!refText.trim() && !refFile) {
-      setExtractError("Paste a referral or choose a file first.");
+      setFlowError("Paste a referral or choose a file first.");
       return;
     }
     setExtracting(true);
-    setExtractError("");
-    setExtract(null);
+    setFlowError("");
+    setProposal(null);
+    setConfirmed(null);
+    setManualPick("");
     try {
-      const res = await extractReferral({ file: refFile, text: refText });
-      setExtract(res);
+      const res = await flowStart({ file: refFile, text: refText });
+      setThreadId(res.thread_id);
+      setProposal(res.proposal);
     } catch (e) {
-      setExtractError(e.message);
+      setFlowError(e.message);
     } finally {
       setExtracting(false);
     }
   };
 
-  const useExtracted = () => {
-    if (extract?.specialty_id) setSpecialty(extract.specialty_id);
+  // Resume the graph at the confirm gate with the GP's decision, then set the
+  // working specialty. source = 'model' (accepted the extraction) or 'clinician'.
+  const confirm = async (specialty_id, display_name, source) => {
+    setFlowError("");
+    try {
+      await flowResume(threadId, { specialty_id, display_name, source });
+      setSpecialty(specialty_id);
+      setConfirmed({ display_name, source });
+      setThreadId(null);
+      setProposal(null);
+    } catch (e) {
+      setFlowError(e.message);
+    }
+  };
+
+  const confirmManual = () => {
+    const s = specialties.find((x) => x.specialty_id === manualPick);
+    if (s) confirm(s.specialty_id, s.display_name, "clinician");
   };
 
   return (
@@ -98,8 +120,9 @@ export default function App() {
       <section className="referral">
         <h2>1 · Referral</h2>
         <p className="note">
-          Paste the referral text or upload a typed PDF / Word file. The letter
-          stays on the backend; only the stated specialty is extracted.
+          Paste the referral text or upload a typed PDF / Word file (image PDFs are
+          read via OCR). The letter stays on the backend; only the stated specialty
+          is extracted, then you confirm it.
         </p>
         <textarea
           rows={5}
@@ -118,24 +141,47 @@ export default function App() {
           </button>
         </div>
 
-        {extractError && <p className="error">{extractError}</p>}
+        {flowError && <p className="error">{flowError}</p>}
 
-        {extract && extract.source === "model" && (
+        {proposal && proposal.source === "model" && (
           <div className="extract ok">
             <p>
-              Extracted specialty: <strong>{extract.display_name}</strong>
+              Extracted specialty: <strong>{proposal.display_name}</strong>
             </p>
-            <blockquote>"{extract.evidence_quote}"</blockquote>
-            <button onClick={useExtracted}>Use this specialty</button>
+            <blockquote>"{proposal.evidence_quote}"</blockquote>
+            <button
+              onClick={() => confirm(proposal.specialty_id, proposal.display_name, "model")}
+            >
+              Use this specialty
+            </button>
             <span className="hint">Not right? Pick manually below — the GP decides.</span>
           </div>
         )}
 
-        {extract && extract.source === "none" && (
+        {proposal && proposal.source === "none" && (
           <div className="extract warn">
-            <p>{extract.detail}</p>
-            <span className="hint">Select the specialty manually below.</span>
+            <p>{proposal.detail}</p>
+            <div className="referral-actions">
+              <select value={manualPick} onChange={(e) => setManualPick(e.target.value)}>
+                <option value="">Select the specialty…</option>
+                {specialties.map((s) => (
+                  <option key={s.specialty_id} value={s.specialty_id}>
+                    {s.display_name}
+                  </option>
+                ))}
+              </select>
+              <button onClick={confirmManual} disabled={!manualPick}>
+                Confirm selection
+              </button>
+            </div>
           </div>
+        )}
+
+        {confirmed && (
+          <p className="confirmed">
+            Using <strong>{confirmed.display_name}</strong> —{" "}
+            {confirmed.source === "model" ? "extracted from the letter" : "entered by the clinician"}.
+          </p>
         )}
       </section>
 
