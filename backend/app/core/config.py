@@ -20,11 +20,20 @@ class Settings(BaseSettings):
     database_url: str = ""          # postgresql+asyncpg://…-pooler…/db  (app queries)
     database_url_direct: str = ""   # postgresql://…/db                 (migrations/seed only)
 
-    # --- extraction (Phase 2). One OpenAI call, EU endpoint, synthetic data only. ---
+    # --- extraction (Phase 2). One OpenAI call, synthetic data only. ---
     openai_api_key: str = ""
     openai_model: str = "gpt-4o-mini"            # must support Structured Outputs (gpt-4o-mini class)
-    openai_base_url: str = "https://eu.api.openai.com/v1"
+    # Standard endpoint by default. eu.api.openai.com works ONLY for orgs enrolled in
+    # OpenAI EU data residency (eligibility review); a normal key fails against it.
+    openai_base_url: str = "https://api.openai.com/v1"
     max_upload_mb: int = 5
+
+    # --- OCR fallback for image-only PDFs / image uploads (Mistral Document AI, EU). ---
+    # Only used when a PDF has no text layer. Empty key -> image PDFs rejected
+    # (text-layer PDFs/DOCX/paste work without it). Synthetic data only.
+    mistral_api_key: str = ""
+    mistral_ocr_url: str = "https://api.mistral.ai/v1/ocr"
+    mistral_ocr_model: str = "mistral-ocr-latest"
 
     # --- ranking policy (deterministic, never the model) ---
     # Which wait column orders the wait-led list. 'first_appt_days' = the

@@ -110,7 +110,7 @@ export default function App() {
         <div className="referral-actions">
           <input
             type="file"
-            accept=".pdf,.docx,.txt"
+            accept=".pdf,.docx,.txt,.png,.jpg,.jpeg,.webp,.tiff"
             onChange={(e) => setRefFile(e.target.files?.[0] || null)}
           />
           <button onClick={onExtract} disabled={extracting}>

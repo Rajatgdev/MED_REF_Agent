@@ -91,10 +91,17 @@ async def extract_specialty(text: str) -> ExtractResult:
     try:
         async with httpx.AsyncClient(timeout=_TIMEOUT) as c:
             r = await c.post(url, json=body, headers=headers)
-            r.raise_for_status()
-            msg = r.json()["choices"][0]["message"]
-    except (httpx.HTTPError, KeyError, IndexError):
+    except httpx.HTTPError as e:
+        print(f"[extract] OpenAI request error: {e!r}", flush=True)
         return _abstain("Extraction failed — select the specialty manually.")
+    if r.status_code >= 400:
+        print(f"[extract] OpenAI {r.status_code}: {r.text[:500]}", flush=True)
+        return _abstain("Extraction failed — select the specialty manually.")
+    try:
+        msg = r.json()["choices"][0]["message"]
+    except (KeyError, IndexError, ValueError):
+        print("[extract] unexpected OpenAI response shape", flush=True)
+        return _abstain("Extraction returned an unreadable result — select manually.")
 
     if msg.get("refusal"):
         return _abstain("Extraction declined — select the specialty manually.")
