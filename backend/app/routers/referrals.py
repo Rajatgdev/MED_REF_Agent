@@ -36,7 +36,7 @@ async def rank(
     point: tuple[float, float] | None = None
     if lat is not None and lng is not None:
         point = (lat, lng)
-    elif origin:
+    elif origin and len(origin.strip()) >= 3:
         try:
             point = await geocode.geocode_town(origin)
         except geocode.GeocodeError as e:
