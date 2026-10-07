@@ -90,15 +90,18 @@ and (2) any future audit / clinician-entered field.
 
 | Phase | Work | Done when |
 | --- | --- | --- |
-| **0 · Data + skeleton** *(this scaffold)* | Monorepo; FastAPI + Neon (EU); three CSVs → seeded tables; keyed lookup; two orderings | App boots; `/api/rank?specialty=orthopaedics` returns 5 hospitals wait-led, each wait with date+source, missing shown as missing (never fastest) |
-| 1 · Deterministic core | Self-hosted OSRM + OTP2 travel; real travel-led ordering | Given a fixed origin, 5 hospitals rank correctly, 'unavailable' where no route |
+| **0 · Data + skeleton** *(done)* | Monorepo; FastAPI + Neon (EU); three CSVs → seeded tables; keyed lookup; two orderings | App boots; `/api/rank?specialty=orthopaedics` returns 5 hospitals wait-led, each wait with date+source, missing shown as missing (never fastest) |
+| **1 · Deterministic core** *(code done; engines run on your infra)* | OSRM driving + OTP2 transit clients + local Nominatim geocode; mode-aware real travel-led ordering; `infra/` Docker stack | Given a fixed origin, 5 hospitals rank by travel, 'unavailable' where no route (never 0) |
 | 2 · Extraction | OpenAI Structured Outputs + Pydantic enum-or-null + exact-span validator; pdfplumber / python-docx | On 10 synthetic letters it extracts right and abstains (not guesses) on the ambiguous one |
 | 3 · UI + safety surface | LangGraph gates; intake → confirm → result cards → override → export; clinician auth (Argon2id) | Full flow runs; every number shows source + date; letter never leaves the backend |
 | 4 · Harden + rehearse | Edge cases, synthetic test set, DPIA/boundary notes, demo rehearsal | All edge cases fail safe; demo runs clean twice |
 
 ## Deferred (not in this scaffold, by design)
 
-Auth, file upload, the OpenAI extraction service, the LangGraph graph, and
-self-hosted routing — each belongs to a later phase above. The crypto module and
-the EU/OpenAI config are declared now so later phases cannot drift to weaker
-defaults.
+Auth, file upload, the OpenAI extraction service, and the LangGraph graph — each
+belongs to a later phase above. The crypto module and the EU/OpenAI config are
+declared now so later phases cannot drift to weaker defaults.
+
+Phase 1 routing clients are written here, but the OSRM / OTP2 / Nominatim engines
+run on your infra (`infra/`) — the locked-down build network can't pull the
+OSM/GTFS extracts. Verify the full flow in the UI once the stack is up.

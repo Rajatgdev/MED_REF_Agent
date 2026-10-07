@@ -28,5 +28,6 @@ class RankedLists(BaseModel):
     sort key is missing are appended last (never treated as fastest)."""
     specialty_id: str
     pathway: str                             # which wait column ordered wait_led
+    travel_mode: str                         # 'driving' | 'transit' — how travel_led was computed
     wait_led: list[HospitalWait]
     travel_led: list[HospitalWait]

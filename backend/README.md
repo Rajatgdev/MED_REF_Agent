@@ -28,10 +28,16 @@ python -m app.db.seed           # load data/*.csv into the tables
 
 ```bash
 uvicorn app.main:app --reload
-# GET /health                         -> {status, database}
-# GET /api/specialties                -> the allowlist
-# GET /api/rank?specialty=orthopaedics -> two ranked lists (wait real, travel unavailable)
+# GET /health                                               -> {status, database}
+# GET /api/specialties                                      -> the allowlist
+# GET /api/rank?specialty=orthopaedics                      -> two lists (travel unavailable: no origin)
+# GET /api/rank?specialty=orthopaedics&origin=Ennis&mode=driving   -> real travel-led (needs infra/)
+# GET /api/rank?specialty=orthopaedics&origin=Ennis&mode=transit   -> transit (OTP2)
 ```
+
+Travel needs the self-hosted routing engines from `../infra/` (OSRM, OTP2,
+Nominatim) and their URLs in `.env`. Any engine left unconfigured returns travel
+as `null` → "unavailable", never a guessed number.
 
 **Phase 0 done when:** `/api/rank?specialty=orthopaedics` returns the 5 hospitals
 wait-led, each wait carrying its date + source, Louth shown `missing` (not 0) and
@@ -53,9 +59,10 @@ app/
 │   ├── store.py        exact keyed lookups (no model, no fuzzy match)
 │   └── migrations/001_initial.sql   hospitals, specialties, waits
 ├── services/
-│   ├── travel.py       OSRM/OTP2 travel — stubbed (None) until Phase 1
+│   ├── geocode.py      coarse town -> centroid via local Nominatim
+│   ├── travel.py       OSRM driving + OTP2 transit; missing leg = None, never 0
 │   └── ranking.py      the two orderings; missing sorts LAST, never fastest
-├── routers/referrals.py  /api/specialties, /api/rank
+├── routers/referrals.py  /api/specialties, /api/rank (origin, mode)
 └── models/schemas.py   HospitalWait, RankedLists (wait + travel shown separately)
 ```
 

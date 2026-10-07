@@ -30,6 +30,16 @@ class Settings(BaseSettings):
     # outpatient first appointment a GP referral leads to.
     wait_pathway: str = "first_appt_days"
 
+    # --- routing (Phase 1). All self-hosted; no patient coordinate leaves local. ---
+    # Empty URL = that engine is not configured -> travel comes back unavailable
+    # (None), never a guessed number. Point these at the infra/ Docker stack.
+    nominatim_url: str = ""   # e.g. http://localhost:8080  (coarse town -> centroid)
+    osrm_url: str = ""        # e.g. http://localhost:5000  (driving /table matrix)
+    otp2_url: str = ""        # e.g. http://localhost:8081  (transit GraphQL plan)
+    default_mode: str = "driving"            # 'driving' | 'transit'
+    transit_timezone: str = "Europe/Dublin"  # OTP2 departure times
+    routing_timeout_seconds: float = 20.0
+
     # --- cors: the Vercel frontend origin(s), comma-separated ---
     allowed_origins: str = "http://localhost:5173"
 

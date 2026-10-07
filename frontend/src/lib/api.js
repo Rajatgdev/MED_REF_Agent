@@ -14,5 +14,8 @@ async function req(path) {
 }
 
 export const getSpecialties = () => req("/api/specialties");
-export const getRank = (specialty) =>
-  req(`/api/rank?specialty=${encodeURIComponent(specialty)}`);
+export const getRank = (specialty, { origin = "", mode = "driving" } = {}) => {
+  const p = new URLSearchParams({ specialty, mode });
+  if (origin) p.set("origin", origin);
+  return req(`/api/rank?${p.toString()}`);
+};

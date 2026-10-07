@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { getSpecialties, getRank } from "./lib/api";
 
-// Phase 0 UI: pick a specialty, see the two deterministic orderings side by side.
-// Wait and travel are shown SEPARATELY (no combined score). Missing wait shows as
-// "missing", uncomputed travel as "unavailable" — never 0. The gated upload →
-// extract → confirm → export flow arrives in Phase 3.
+// Phase 0-1 UI: pick a specialty + coarse origin + mode, see the two deterministic
+// orderings side by side. Wait and travel are shown SEPARATELY (no combined score).
+// Missing wait shows as "missing", uncomputed travel as "unavailable" — never 0.
+// The gated upload → extract → confirm → export flow arrives in Phase 3.
 
 function waitLabel(h) {
   if (h.first_appt_days == null) return "missing";
@@ -36,6 +36,8 @@ function List({ title, note, hospitals }) {
 export default function App() {
   const [specialties, setSpecialties] = useState([]);
   const [specialty, setSpecialty] = useState("orthopaedics");
+  const [origin, setOrigin] = useState("");
+  const [mode, setMode] = useState("driving");
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
 
@@ -46,8 +48,10 @@ export default function App() {
   useEffect(() => {
     if (!specialty) return;
     setError("");
-    getRank(specialty).then(setData).catch((e) => setError(e.message));
-  }, [specialty]);
+    getRank(specialty, { origin, mode })
+      .then(setData)
+      .catch((e) => setError(e.message));
+  }, [specialty, origin, mode]);
 
   return (
     <main>
@@ -59,16 +63,33 @@ export default function App() {
         </p>
       </header>
 
-      <label>
-        Specialty&nbsp;
-        <select value={specialty} onChange={(e) => setSpecialty(e.target.value)}>
-          {specialties.map((s) => (
-            <option key={s.specialty_id} value={s.specialty_id}>
-              {s.display_name}
-            </option>
-          ))}
-        </select>
-      </label>
+      <div className="controls">
+        <label>
+          Specialty&nbsp;
+          <select value={specialty} onChange={(e) => setSpecialty(e.target.value)}>
+            {specialties.map((s) => (
+              <option key={s.specialty_id} value={s.specialty_id}>
+                {s.display_name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Origin town&nbsp;
+          <input
+            value={origin}
+            placeholder="e.g. Ennis (blank = no travel)"
+            onChange={(e) => setOrigin(e.target.value)}
+          />
+        </label>
+        <label>
+          Mode&nbsp;
+          <select value={mode} onChange={(e) => setMode(e.target.value)}>
+            <option value="driving">Driving</option>
+            <option value="transit">Public transport</option>
+          </select>
+        </label>
+      </div>
 
       {error && <p className="error">{error}</p>}
 
@@ -81,7 +102,7 @@ export default function App() {
           />
           <List
             title="Travel-led"
-            note="ordered by journey time (Phase 1: OSRM / OTP2)"
+            note={`ordered by ${data.travel_mode} journey time${origin ? "" : " — add an origin town"}`}
             hospitals={data.travel_led}
           />
         </div>

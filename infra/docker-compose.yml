@@ -1,0 +1,40 @@
+# Self-hosted routing stack for Phase 1. All three run locally so no patient
+# coordinate leaves the organisation. Build the graphs ONCE (see infra/README.md),
+# then `docker compose up`. The backend points at these via OSRM_URL / OTP2_URL /
+# NOMINATIM_URL in backend/.env.
+#
+# Data licences: OSM = ODbL (attribution). NTA/TFI GTFS = CC BY 4.0 (attribution).
+services:
+  # Driving matrix. Expects a prebuilt ./osrm/ireland.osrm.* (see README).
+  osrm:
+    image: osrm/osrm-backend:v5.27.1
+    command: osrm-routed --algorithm mld /data/ireland.osrm
+    volumes:
+      - ./osrm:/data
+    ports:
+      - "5000:5000"
+
+  # Transit. Expects a prebuilt ./otp/graph.obj (OSM + GTFS), see README.
+  otp2:
+    image: opentripplanner/opentripplanner:2.5.0
+    command: --load --serve
+    volumes:
+      - ./otp:/var/opentripplanner
+    ports:
+      - "8081:8080"
+
+  # Coarse town -> centroid. First run imports the Ireland extract (slow, once).
+  nominatim:
+    image: mediagis/nominatim:4.4
+    environment:
+      PBF_PATH: /nominatim/data/ireland-and-northern-ireland-latest.osm.pbf
+      IMPORT_STYLE: address
+    volumes:
+      - ./nominatim/data:/nominatim/data
+      - nominatim-db:/var/lib/postgresql/14/main
+    ports:
+      - "8080:8080"
+    shm_size: 1gb
+
+volumes:
+  nominatim-db:

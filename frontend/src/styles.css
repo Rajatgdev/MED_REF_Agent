@@ -15,8 +15,9 @@ body {
 main { max-width: 860px; margin: 0 auto; padding: 24px 16px 48px; }
 header h1 { margin: 0 0 4px; font-size: 22px; }
 .tag { color: var(--muted); margin: 0 0 20px; max-width: 60ch; }
-label { display: inline-block; margin-bottom: 20px; font-weight: 600; }
-select { font: inherit; padding: 6px 8px; }
+.controls { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
+label { font-weight: 600; }
+select, input { font: inherit; padding: 6px 8px; }
 .error { color: var(--warn); font-weight: 600; }
 .lists { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 640px) { .lists { grid-template-columns: 1fr; } }

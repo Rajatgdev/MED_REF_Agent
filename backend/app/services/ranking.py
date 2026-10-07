@@ -15,14 +15,15 @@ def _missing_last(value: int | None) -> tuple[int, int]:
     return (0, value) if value is not None else (1, 0)
 
 
-def build(specialty_id: str, rows: list[dict],
-          origin: tuple[float, float] | None = None) -> RankedLists:
+async def build(specialty_id: str, rows: list[dict],
+                origin: tuple[float, float] | None = None,
+                mode: str | None = None) -> RankedLists:
     """rows = store.waits_for_specialty(...). origin = (lat, lng) or None.
 
-    Wait-led orders by the configured wait pathway; travel-led by travel minutes.
-    Both lists contain the same hospitals."""
-    tmap = (travel.travel_minutes(origin[0], origin[1], rows)
-            if origin is not None else {r["hospital"]: None for r in rows})
+    Wait-led orders by the configured wait pathway; travel-led by travel minutes
+    for the chosen mode. Both lists contain the same hospitals."""
+    mode = mode or settings.default_mode
+    tmap = await travel.matrix(origin, rows, mode)
 
     pathway = settings.wait_pathway
     items = [
@@ -42,4 +43,4 @@ def build(specialty_id: str, rows: list[dict],
     travel_led = sorted(items, key=lambda i: _missing_last(i.travel_minutes))
 
     return RankedLists(specialty_id=specialty_id, pathway=pathway,
-                       wait_led=wait_led, travel_led=travel_led)
+                       travel_mode=mode, wait_led=wait_led, travel_led=travel_led)
