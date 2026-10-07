@@ -20,10 +20,11 @@ class Settings(BaseSettings):
     database_url: str = ""          # postgresql+asyncpg://…-pooler…/db  (app queries)
     database_url_direct: str = ""   # postgresql://…/db                 (migrations/seed only)
 
-    # --- extraction (Phase 2 — declared, not yet used) ---
+    # --- extraction (Phase 2). One OpenAI call, EU endpoint, synthetic data only. ---
     openai_api_key: str = ""
-    openai_model: str = "gpt-4o-mini"
-    openai_base_url: str = "https://eu.api.openai.com/v1"   # EU endpoint; synthetic data only
+    openai_model: str = "gpt-4o-mini"            # must support Structured Outputs (gpt-4o-mini class)
+    openai_base_url: str = "https://eu.api.openai.com/v1"
+    max_upload_mb: int = 5
 
     # --- ranking policy (deterministic, never the model) ---
     # Which wait column orders the wait-led list. 'first_appt_days' = the

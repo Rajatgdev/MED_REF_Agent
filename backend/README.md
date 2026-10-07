@@ -33,6 +33,7 @@ uvicorn app.main:app --reload
 # GET /api/rank?specialty=orthopaedics                      -> two lists (travel unavailable: no origin)
 # GET /api/rank?specialty=orthopaedics&origin=Ennis&mode=driving   -> real travel-led (needs ORS_API_KEY)
 # GET /api/rank?specialty=orthopaedics&origin=Ennis&mode=transit   -> unavailable on ORS (Option B)
+# POST /api/extract  (multipart: file=<pdf/docx/txt> OR text=<referral>)  -> {specialty_id|null, source}
 ```
 
 Travel (driving) uses hosted OpenRouteService — set `ORS_API_KEY` in `.env`
@@ -62,8 +63,12 @@ app/
 ├── services/
 │   ├── geocode.py      coarse town -> centroid via local Nominatim
 │   ├── travel.py       OSRM driving + OTP2 transit; missing leg = None, never 0
-│   └── ranking.py      the two orderings; missing sorts LAST, never fastest
-├── routers/referrals.py  /api/specialties, /api/rank (origin, mode)
+│   ├── ranking.py      the two orderings; missing sorts LAST, never fastest
+│   ├── parsing.py      local PDF/DOCX/text extraction (no OCR, no egress)
+│   └── extraction.py   one OpenAI call + enum-or-null + exact-span validator
+├── routers/
+│   ├── referrals.py  /api/specialties, /api/rank (origin, mode)
+│   └── extract.py    /api/extract (upload/paste -> stated specialty)
 └── models/schemas.py   HospitalWait, RankedLists (wait + travel shown separately)
 ```
 

@@ -31,3 +31,16 @@ class RankedLists(BaseModel):
     travel_mode: str                         # 'driving' | 'transit' — how travel_led was computed
     wait_led: list[HospitalWait]
     travel_led: list[HospitalWait]
+
+
+class ExtractResult(BaseModel):
+    """Phase 2: the specialty extraction result shown at the GP confirm gate.
+
+    source 'model' = validated (specialty on the allowlist AND its evidence quote
+    appears verbatim in the letter). source 'none' = abstained or failed — the GP
+    selects manually; never a guess."""
+    specialty_id: str | None = None
+    display_name: str | None = None
+    evidence_quote: str | None = None
+    source: str                              # 'model' | 'none'
+    detail: str = ""

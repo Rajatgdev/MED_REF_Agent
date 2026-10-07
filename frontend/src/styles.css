@@ -18,6 +18,18 @@ header h1 { margin: 0 0 4px; font-size: 22px; }
 .controls { display: flex; flex-wrap: wrap; gap: 16px; margin-bottom: 20px; }
 label { font-weight: 600; }
 select, input { font: inherit; padding: 6px 8px; }
+section { margin-bottom: 24px; }
+section h2 { font-size: 15px; margin: 0 0 6px; }
+.referral textarea { width: 100%; font: inherit; padding: 8px; border: 1px solid #e2e6ec; border-radius: 8px; resize: vertical; }
+.referral-actions { display: flex; align-items: center; gap: 12px; margin-top: 10px; }
+button { font: inherit; font-weight: 600; padding: 7px 14px; border: 0; border-radius: 8px; background: var(--accent); color: #fff; cursor: pointer; }
+button:disabled { opacity: 0.6; cursor: default; }
+.extract { margin-top: 14px; padding: 12px 14px; border-radius: 8px; border: 1px solid; }
+.extract.ok { background: #f0f7ff; border-color: #bcd9f5; }
+.extract.warn { background: #fff7ec; border-color: #f0d9b0; }
+.extract blockquote { margin: 8px 0; padding-left: 10px; border-left: 3px solid #bcd9f5; color: var(--muted); }
+.extract button { margin-right: 10px; }
+.hint { color: var(--muted); font-size: 13px; }
 .error { color: var(--warn); font-weight: 600; }
 .lists { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 640px) { .lists { grid-template-columns: 1fr; } }

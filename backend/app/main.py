@@ -10,7 +10,7 @@ from sqlalchemy import text
 
 from app.core.config import settings
 from app.db.session import SessionLocal
-from app.routers import referrals
+from app.routers import extract, referrals
 
 app = FastAPI(title="Referral Options Agent", version="0.1")
 
@@ -23,7 +23,7 @@ app.add_middleware(
 )
 
 app.include_router(referrals.router)
-
+app.include_router(extract.router)
 
 @app.get("/health")
 async def health():

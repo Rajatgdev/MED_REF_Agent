@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
-import { getSpecialties, getRank } from "./lib/api";
+import { getSpecialties, getRank, extractReferral } from "./lib/api";
 
-// Phase 0-1 UI: pick a specialty + coarse origin + mode, see the two deterministic
-// orderings side by side. Wait and travel are shown SEPARATELY (no combined score).
-// Missing wait shows as "missing", uncomputed travel as "unavailable" — never 0.
-// The gated upload → extract → confirm → export flow arrives in Phase 3.
+// Phase 0-2 UI. Step 1: upload/paste a referral, extract the STATED specialty,
+// GP confirms (or picks manually — the GP always decides). Step 2: origin + mode.
+// Wait and travel are shown SEPARATELY (no combined score). Missing wait = "missing",
+// uncomputed travel = "unavailable" — never 0.
 
 function waitLabel(h) {
   if (h.first_appt_days == null) return "missing";
@@ -41,14 +41,19 @@ export default function App() {
   const [data, setData] = useState(null);
   const [error, setError] = useState("");
 
+  // extraction (Phase 2)
+  const [refText, setRefText] = useState("");
+  const [refFile, setRefFile] = useState(null);
+  const [extracting, setExtracting] = useState(false);
+  const [extract, setExtract] = useState(null);
+  const [extractError, setExtractError] = useState("");
+
   useEffect(() => {
     getSpecialties().then(setSpecialties).catch((e) => setError(e.message));
   }, []);
 
   useEffect(() => {
     if (!specialty) return;
-    // Debounce: wait 400ms after the last keystroke so typing an origin fires
-    // one request, not one per character.
     const t = setTimeout(() => {
       setError("");
       getRank(specialty, { origin, mode })
@@ -57,6 +62,28 @@ export default function App() {
     }, 400);
     return () => clearTimeout(t);
   }, [specialty, origin, mode]);
+
+  const onExtract = async () => {
+    if (!refText.trim() && !refFile) {
+      setExtractError("Paste a referral or choose a file first.");
+      return;
+    }
+    setExtracting(true);
+    setExtractError("");
+    setExtract(null);
+    try {
+      const res = await extractReferral({ file: refFile, text: refText });
+      setExtract(res);
+    } catch (e) {
+      setExtractError(e.message);
+    } finally {
+      setExtracting(false);
+    }
+  };
+
+  const useExtracted = () => {
+    if (extract?.specialty_id) setSpecialty(extract.specialty_id);
+  };
 
   return (
     <main>
@@ -68,33 +95,80 @@ export default function App() {
         </p>
       </header>
 
-      <div className="controls">
-        <label>
-          Specialty&nbsp;
-          <select value={specialty} onChange={(e) => setSpecialty(e.target.value)}>
-            {specialties.map((s) => (
-              <option key={s.specialty_id} value={s.specialty_id}>
-                {s.display_name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Origin town&nbsp;
+      <section className="referral">
+        <h2>1 · Referral</h2>
+        <p className="note">
+          Paste the referral text or upload a typed PDF / Word file. The letter
+          stays on the backend; only the stated specialty is extracted.
+        </p>
+        <textarea
+          rows={5}
+          value={refText}
+          placeholder="Paste the referral letter here…"
+          onChange={(e) => setRefText(e.target.value)}
+        />
+        <div className="referral-actions">
           <input
-            value={origin}
-            placeholder="e.g. Ennis (blank = no travel)"
-            onChange={(e) => setOrigin(e.target.value)}
+            type="file"
+            accept=".pdf,.docx,.txt"
+            onChange={(e) => setRefFile(e.target.files?.[0] || null)}
           />
-        </label>
-        <label>
-          Mode&nbsp;
-          <select value={mode} onChange={(e) => setMode(e.target.value)}>
-            <option value="driving">Driving</option>
-            <option value="transit">Public transport</option>
-          </select>
-        </label>
-      </div>
+          <button onClick={onExtract} disabled={extracting}>
+            {extracting ? "Extracting…" : "Extract specialty"}
+          </button>
+        </div>
+
+        {extractError && <p className="error">{extractError}</p>}
+
+        {extract && extract.source === "model" && (
+          <div className="extract ok">
+            <p>
+              Extracted specialty: <strong>{extract.display_name}</strong>
+            </p>
+            <blockquote>"{extract.evidence_quote}"</blockquote>
+            <button onClick={useExtracted}>Use this specialty</button>
+            <span className="hint">Not right? Pick manually below — the GP decides.</span>
+          </div>
+        )}
+
+        {extract && extract.source === "none" && (
+          <div className="extract warn">
+            <p>{extract.detail}</p>
+            <span className="hint">Select the specialty manually below.</span>
+          </div>
+        )}
+      </section>
+
+      <section>
+        <h2>2 · Options</h2>
+        <div className="controls">
+          <label>
+            Specialty&nbsp;
+            <select value={specialty} onChange={(e) => setSpecialty(e.target.value)}>
+              {specialties.map((s) => (
+                <option key={s.specialty_id} value={s.specialty_id}>
+                  {s.display_name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Origin town&nbsp;
+            <input
+              value={origin}
+              placeholder="e.g. Ennis (blank = no travel)"
+              onChange={(e) => setOrigin(e.target.value)}
+            />
+          </label>
+          <label>
+            Mode&nbsp;
+            <select value={mode} onChange={(e) => setMode(e.target.value)}>
+              <option value="driving">Driving</option>
+              <option value="transit">Public transport</option>
+            </select>
+          </label>
+        </div>
+      </section>
 
       {error && <p className="error">{error}</p>}
 
