@@ -35,6 +35,11 @@ class Settings(BaseSettings):
     mistral_ocr_url: str = "https://api.mistral.ai/v1/ocr"
     mistral_ocr_model: str = "mistral-ocr-latest"
 
+    # --- orchestration (Phase 3). AES key for the encrypted LangGraph checkpointer. ---
+    # 16/24/32 chars (32 = AES-256). Read from .env here and passed explicitly to the
+    # serializer — LangGraph reads os.environ, which pydantic-settings does NOT populate.
+    langgraph_aes_key: str = ""
+
     # --- ranking policy (deterministic, never the model) ---
     # Which wait column orders the wait-led list. 'first_appt_days' = the
     # outpatient first appointment a GP referral leads to.

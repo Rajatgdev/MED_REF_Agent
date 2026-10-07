@@ -14,3 +14,8 @@ tzdata>=2024.1
 pdfplumber==0.11.4
 python-docx==1.1.2
 python-multipart==0.0.12
+# --- Phase 3: LangGraph orchestration + encrypted Postgres checkpointer ---
+langgraph>=0.3.0
+langgraph-checkpoint-postgres>=2.0.0
+psycopg-pool>=3.2.0
+pycryptodome>=3.20.0
