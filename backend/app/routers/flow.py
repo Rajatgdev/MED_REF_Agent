@@ -1,12 +1,15 @@
-"""Phase 3 flow API: drive the gated LangGraph. 3a exposes the first gate.
+"""Phase 3 flow API: drive the gated LangGraph.
 
-/start  — intake the referral, run to the confirm gate, return {thread_id, proposal}.
-/resume — the GP's decision for a thread; runs to the next stop and returns it.
+/start  — intake the referral, run to the first gate, return {thread_id, stage, proposal}.
+/resume — pass the GP's decision for a thread; returns the NEXT gate, or the final
+          result ({stage:"done", audit_id, advisory_markdown}) when the flow ends.
 
-State lives in the encrypted Postgres checkpointer, keyed by thread_id, so a parked
-gate survives a restart. The letter is not returned or persisted beyond the graph state.
+Both gates (confirm specialty, sign off) go through /resume. State lives in the
+encrypted Postgres checkpointer, keyed by thread_id, so a parked gate survives a
+restart. The letter is not returned or persisted beyond the graph state.
 """
 import uuid
+from typing import Any
 
 from fastapi import APIRouter, File, Form, HTTPException, Request, UploadFile
 from pydantic import BaseModel
@@ -25,12 +28,24 @@ def _graph(request: Request):
     return g
 
 
+def _shape(result: dict) -> dict:
+    """Turn a graph result into {stage, ...}: the next interrupt's payload, or the
+    final output when the flow has ended."""
+    interrupts = result.get("__interrupt__")
+    if interrupts:
+        return dict(interrupts[0].value)                 # carries "stage"
+    return {"stage": "done", "audit_id": result.get("audit_id"),
+            "advisory_markdown": result.get("advisory_markdown")}
+
+
 @router.post("/start")
 async def start(
     request: Request,
-    file: UploadFile | None = File(default=None),
+    file: UploadFile | str | None = File(default=None),
     text: str | None = Form(default=None),
 ):
+    if isinstance(file, str):            # Swagger "send empty value" sends "" — treat as no file
+        file = None
     try:
         raw = await intake.read_referral(file, text)
     except intake.IntakeError as e:
@@ -39,27 +54,20 @@ async def start(
     graph = _graph(request)
     thread_id = uuid.uuid4().hex
     config = {"configurable": {"thread_id": thread_id}}
-    result = await graph.ainvoke({"referral_text": raw}, config)
-    interrupts = result.get("__interrupt__")
-    if not interrupts:
-        raise HTTPException(500, "Flow did not reach the confirm gate.")
-    return {"thread_id": thread_id, "proposal": interrupts[0].value.get("proposal")}
-
-
-class Decision(BaseModel):
-    specialty_id: str | None = None
-    display_name: str | None = None
-    source: str                      # 'model' | 'clinician'
+    result = await graph.ainvoke({"referral_text": raw, "thread_id": thread_id}, config)
+    out = _shape(result)
+    out["thread_id"] = thread_id
+    return out
 
 
 class ResumeIn(BaseModel):
     thread_id: str
-    decision: Decision
+    decision: dict[str, Any]
 
 
 @router.post("/resume")
 async def resume(request: Request, body: ResumeIn):
     graph = _graph(request)
     config = {"configurable": {"thread_id": body.thread_id}}
-    result = await graph.ainvoke(Command(resume=body.decision.model_dump()), config)
-    return result.get("confirmed")
+    result = await graph.ainvoke(Command(resume=body.decision), config)
+    return _shape(result)

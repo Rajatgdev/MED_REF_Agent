@@ -54,3 +54,22 @@ async def waits_for_specialty(specialty: str) -> list[dict]:
                 d["observation_date"] = d["observation_date"].isoformat()
             out.append(d)
         return out
+
+
+async def record_signoff(thread_id: str, specialty_id: str, specialty_name: str,
+                         specialty_source: str, origin: str | None, travel_mode: str | None,
+                         chosen_hospital: str, snapshot: dict) -> int:
+    """Write one sign-off audit row; returns its id. No patient letter is stored —
+    only the decision + the reviewed snapshot of the orderings."""
+    import json
+    async with SessionLocal() as s:
+        row = await s.execute(
+            text("INSERT INTO referral_audit (thread_id, specialty_id, specialty_name, "
+                 "specialty_source, origin, travel_mode, chosen_hospital, snapshot) "
+                 "VALUES (:t, :sid, :sname, :src, :o, :m, :h, CAST(:snap AS JSONB)) "
+                 "RETURNING id"),
+            {"t": thread_id, "sid": specialty_id, "sname": specialty_name,
+             "src": specialty_source, "o": origin, "m": travel_mode,
+             "h": chosen_hospital, "snap": json.dumps(snapshot)})
+        await s.commit()
+        return row.scalar_one()

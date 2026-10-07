@@ -31,6 +31,11 @@ button:disabled { opacity: 0.6; cursor: default; }
 .extract button { margin-right: 10px; }
 .hint { color: var(--muted); font-size: 13px; }
 .confirmed { margin-top: 12px; color: var(--accent); font-weight: 600; }
+.list li.pickable { cursor: pointer; border-radius: 6px; padding: 4px 6px; margin: 0 -6px 12px; }
+.list li.pickable:hover { background: #f2f6fb; }
+.list li.selected { background: #e8f1fb; outline: 2px solid var(--accent); }
+.signoff-bar { display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  margin-top: 16px; padding: 12px 16px; background: #fff; border: 1px solid #e2e6ec; border-radius: 10px; }
 .error { color: var(--warn); font-weight: 600; }
 .lists { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
 @media (max-width: 640px) { .lists { grid-template-columns: 1fr; } }
