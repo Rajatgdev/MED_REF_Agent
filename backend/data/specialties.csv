@@ -1,0 +1,31 @@
+specialty_id,display_name,aliases
+orthopaedics,Orthopaedics,ortho;orthopedics;orthopaedic surgery;T&O;trauma and orthopaedics
+dermatology,Dermatology,derm;skin
+cardiology,Cardiology,cardio;heart
+ophthalmology,Ophthalmology,eye;eyes;eye clinic
+ent,ENT (Otolaryngology),ear nose and throat;otolaryngology;ent surgery
+general_surgery,General Surgery,gen surg;general surgical
+urology,Urology,urological surgery
+gastroenterology,Gastroenterology,gastro;gi
+neurology,Neurology,neuro
+respiratory,Respiratory Medicine,respiratory;pulmonology;chest
+endocrinology,Endocrinology,endo;diabetes and endocrinology
+rheumatology,Rheumatology,rheum
+nephrology,Nephrology,renal;kidney
+vascular_surgery,Vascular Surgery,vascular
+plastic_surgery,Plastic Surgery,plastics;reconstructive surgery
+neurosurgery,Neurosurgery,neuro surgery
+gynaecology,Gynaecology,gynae;gynecology
+obstetrics,Obstetrics,obs
+paediatrics,Paediatrics,paeds;pediatrics;paediatric medicine
+geriatrics,Geriatric Medicine,care of the elderly;geriatric;medicine for older people
+psychiatry,Psychiatry,mental health;psych
+pain_medicine,Pain Medicine,pain management;chronic pain
+haematology,Haematology,haem;hematology
+oncology,Medical Oncology,oncology;cancer services
+maxillofacial,Oral & Maxillofacial Surgery,omfs;maxillofacial;oral surgery
+colorectal_surgery,Colorectal Surgery,colorectal
+breast_surgery,Breast Surgery,breast clinic;symptomatic breast
+cardiothoracic_surgery,Cardiothoracic Surgery,cardiothoracic
+immunology,Immunology,allergy and immunology;clinical immunology
+infectious_diseases,Infectious Diseases,id;infectious disease

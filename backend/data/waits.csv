@@ -1,0 +1,6 @@
+hospital,specialty,first_appt_days,inpatient_days,daycase_days,observation_date,source_url
+Cork University Hospital,orthopaedics,19,6,4,2026-10-06,https://www2.hse.ie/services/activity-performance-data/waiting-for-care/waiting-times/
+Croom Orthopaedic Hospital,orthopaedics,274,171,76,2026-10-06,https://www2.hse.ie/services/activity-performance-data/waiting-for-care/waiting-times/
+Galway University Hospitals,orthopaedics,342,137,100,2026-10-06,https://www2.hse.ie/services/activity-performance-data/waiting-for-care/waiting-times/
+Letterkenny University Hospital,orthopaedics,111,205,133,2026-10-06,https://www2.hse.ie/services/activity-performance-data/waiting-for-care/waiting-times/
+Louth County Hospital,orthopaedics,428,missing,105,2026-10-06,https://www2.hse.ie/services/activity-performance-data/waiting-for-care/waiting-times/
