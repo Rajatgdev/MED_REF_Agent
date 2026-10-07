@@ -31,13 +31,14 @@ uvicorn app.main:app --reload
 # GET /health                                               -> {status, database}
 # GET /api/specialties                                      -> the allowlist
 # GET /api/rank?specialty=orthopaedics                      -> two lists (travel unavailable: no origin)
-# GET /api/rank?specialty=orthopaedics&origin=Ennis&mode=driving   -> real travel-led (needs infra/)
-# GET /api/rank?specialty=orthopaedics&origin=Ennis&mode=transit   -> transit (OTP2)
+# GET /api/rank?specialty=orthopaedics&origin=Ennis&mode=driving   -> real travel-led (needs ORS_API_KEY)
+# GET /api/rank?specialty=orthopaedics&origin=Ennis&mode=transit   -> unavailable on ORS (Option B)
 ```
 
-Travel needs the self-hosted routing engines from `../infra/` (OSRM, OTP2,
-Nominatim) and their URLs in `.env`. Any engine left unconfigured returns travel
-as `null` → "unavailable", never a guessed number.
+Travel (driving) uses hosted OpenRouteService — set `ORS_API_KEY` in `.env`
+(free key, EU-hosted). This is the TEMPORARY Option B; transit is unavailable on
+ORS. No key → travel `null` ("unavailable"), never a guessed number. The plan is
+to revert to self-hosted OSRM/Nominatim/OTP2 — see `docs/architecture.md`.
 
 **Phase 0 done when:** `/api/rank?specialty=orthopaedics` returns the 5 hospitals
 wait-led, each wait carrying its date + source, Louth shown `missing` (not 0) and

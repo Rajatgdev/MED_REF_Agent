@@ -30,14 +30,15 @@ class Settings(BaseSettings):
     # outpatient first appointment a GP referral leads to.
     wait_pathway: str = "first_appt_days"
 
-    # --- routing (Phase 1). All self-hosted; no patient coordinate leaves local. ---
-    # Empty URL = that engine is not configured -> travel comes back unavailable
-    # (None), never a guessed number. Point these at the infra/ Docker stack.
-    nominatim_url: str = ""   # e.g. http://localhost:8080  (coarse town -> centroid)
-    osrm_url: str = ""        # e.g. http://localhost:5000  (driving /table matrix)
-    otp2_url: str = ""        # e.g. http://localhost:8081  (transit GraphQL plan)
-    default_mode: str = "driving"            # 'driving' | 'transit'
-    transit_timezone: str = "Europe/Dublin"  # OTP2 departure times
+    # --- routing (OPTION B, TEMPORARY): hosted OpenRouteService (HeiGIT, Germany/EU).
+    # Geocoding + driving matrix over one API key, no local Docker. Transit is
+    # unavailable on ORS. This discloses the coarse origin to a third party (EU-
+    # resident, but still a processor) — MUST revert to self-hosted OSRM/Nominatim/
+    # OTP2 before real patient data (see docs/architecture.md). Empty key ->
+    # travel/geocode unavailable, never guessed.
+    ors_api_key: str = ""
+    ors_base_url: str = "https://api.openrouteservice.org"
+    default_mode: str = "driving"            # 'driving' | 'transit' (transit unavailable on ORS)
     routing_timeout_seconds: float = 20.0
 
     # --- cors: the Vercel frontend origin(s), comma-separated ---

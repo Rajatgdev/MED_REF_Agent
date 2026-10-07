@@ -47,10 +47,15 @@ export default function App() {
 
   useEffect(() => {
     if (!specialty) return;
-    setError("");
-    getRank(specialty, { origin, mode })
-      .then(setData)
-      .catch((e) => setError(e.message));
+    // Debounce: wait 400ms after the last keystroke so typing an origin fires
+    // one request, not one per character.
+    const t = setTimeout(() => {
+      setError("");
+      getRank(specialty, { origin, mode })
+        .then(setData)
+        .catch((e) => setError(e.message));
+    }, 400);
+    return () => clearTimeout(t);
   }, [specialty, origin, mode]);
 
   return (
