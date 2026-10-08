@@ -1,0 +1,73 @@
+import { useLocation } from "react-router-dom";
+import { motion } from "framer-motion";
+import { useFlow } from "../state/FlowContext";
+import { useTheme } from "../state/ThemeContext";
+import { modeLabel } from "../lib/ui";
+
+const STEPS = [
+  { path: "/", label: "Referral", sub: "Letter & origin" },
+  { path: "/verify", label: "Confirm specialty", sub: "Check the extraction" },
+  { path: "/compare", label: "Review options", sub: "Wait & travel" },
+  { path: "/signoff", label: "Check & sign off", sub: "Audit & advisory" },
+];
+export const GATE_INDEX = { "/": 0, "/verify": 1, "/compare": 2, "/signoff": 3 };
+
+const Shield = () => (
+  <svg viewBox="0 0 24 24" fill="none"><path d="M12 3 4 7v5c0 4.4 3.2 7.6 8 9 4.8-1.4 8-4.6 8-9V7l-8-4Z" stroke="currentColor" strokeWidth="1.6"/><path d="M9.2 12.2 11 14l4-4.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+);
+const Check = () => (
+  <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5 10 17l9-9.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
+);
+
+export default function Sidebar() {
+  const location = useLocation();
+  const f = useFlow();
+  const { theme, setTheme } = useTheme();
+  const current = GATE_INDEX[location.pathname] ?? 0;
+
+  // show the GP's own choices back to them on completed steps
+  const dynSub = (i, fallback) => {
+    if (i === 0 && (f.origin || current > 0)) return `${f.origin || "No origin"} · ${modeLabel(f.mode)}`;
+    if (i === 1 && f.confirmed) return f.confirmed.display_name;
+    return fallback;
+  };
+
+  return (
+    <aside className="rail">
+      <div className="brand">
+        <span className="mark"><Shield /></span>
+        <span className="wm"><b>Referral Options</b><span>Clinician advisory</span></span>
+      </div>
+
+      <nav className="steps" aria-label="Referral review steps">
+        <p className="rail-eyebrow">Referral review</p>
+        {STEPS.map((s, i) => {
+          const state = i < current ? "done" : i === current ? "active" : "todo";
+          return (
+            <div key={s.path} className={`step ${state}`} aria-current={state === "active" ? "step" : undefined}>
+              {state === "active" && (
+                <motion.span className="step-bg" layoutId="rail-active"
+                  transition={{ type: "spring", stiffness: 420, damping: 36 }} />
+              )}
+              <span className="n">{state === "done" ? <Check /> : i + 1}</span>
+              <span className="step-tx">
+                <span className="lbl">{s.label}</span>
+                <span className="sub">{dynSub(i, s.sub)}</span>
+              </span>
+            </div>
+          );
+        })}
+      </nav>
+
+      <div className="rail-foot">
+        <p className="assure"><b>Advisory only.</b> The GP decides. This tool never submits, books, or chooses a referral.</p>
+        <div className="toggle" role="radiogroup" aria-label="Theme">
+          {[["light", "Light"], ["dark", "Dark"], ["system", "Auto"]].map(([v, lbl]) => (
+            <button key={v} className={theme === v ? "on" : ""} role="radio"
+              aria-checked={theme === v} onClick={() => setTheme(v)}>{lbl}</button>
+          ))}
+        </div>
+      </div>
+    </aside>
+  );
+}
