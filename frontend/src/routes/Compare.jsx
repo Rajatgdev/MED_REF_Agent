@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useFlow } from "../state/FlowContext";
@@ -27,7 +27,7 @@ function Panel({ kind, items, origin, chosen, onChoose }) {
     const sel = chosen === h.hospital;
     const missing = rank == null;
     return (
-      <button key={h.hospital} type="button" aria-pressed={sel}
+      <button key={h.hospital} type="button" aria-pressed={sel} data-kind={kind} data-hospital={h.hospital}
         className={`hrow${sel ? " sel" : ""}${missing ? " missing" : ""}`} onClick={() => onChoose(h.hospital)}>
         {sel && <motion.span className="sel-bg" layoutId={`sel-${kind}`} transition={{ type: "spring", stiffness: 420, damping: 36 }} />}
         <span className="rk">{missing ? "—" : rank}</span>
@@ -78,6 +78,8 @@ export default function Compare() {
   const nav = useNavigate();
   const [loading, setLoading] = useState(false);
   const [rankError, setRankError] = useState("");
+  const panelsRef = useRef(null);
+  const [connector, setConnector] = useState(null);
 
   useEffect(() => { if (!f.confirmed) nav("/", { replace: true }); }, [f.confirmed, nav]);
   const specialty = f.confirmed?.specialty_id;
@@ -95,10 +97,66 @@ export default function Compare() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [specialty, f.origin, f.mode]);
 
-  if (!f.confirmed) return null;
   const data = f.rankData;
   const rankedWait = data ? data.wait_led.filter((h) => h.first_appt_days != null).length : 0;
   const total = data ? data.wait_led.length : 0;
+
+  const drawConnector = useCallback(() => {
+    const root = panelsRef.current;
+    if (!root || !f.chosen || window.matchMedia("(max-width: 760px)").matches) {
+      setConnector(null);
+      return;
+    }
+
+    const waitRow = root.querySelector('.hrow.sel[data-kind="wait"]');
+    const travelRow = root.querySelector('.hrow.sel[data-kind="travel"]');
+    if (!waitRow || !travelRow) {
+      setConnector(null);
+      return;
+    }
+
+    const frame = root.getBoundingClientRect();
+    const wait = waitRow.getBoundingClientRect();
+    const travel = travelRow.getBoundingClientRect();
+    const x1 = wait.right - frame.left;
+    const y1 = wait.top + wait.height / 2 - frame.top;
+    const x2 = travel.left - frame.left;
+    const y2 = travel.top + travel.height / 2 - frame.top;
+    const curve = Math.max(8, Math.min(28, (x2 - x1) * 0.45));
+
+    setConnector({
+      width: frame.width,
+      height: frame.height,
+      x1,
+      y1,
+      x2,
+      y2,
+      path: `M ${x1} ${y1} C ${x1 + curve} ${y1}, ${x2 - curve} ${y2}, ${x2} ${y2}`,
+    });
+  }, [f.chosen]);
+
+  useEffect(() => {
+    const root = panelsRef.current;
+    if (!root) return undefined;
+
+    let frame = 0;
+    const scheduleDraw = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(drawConnector);
+    };
+    const observer = typeof ResizeObserver === "undefined" ? null : new ResizeObserver(scheduleDraw);
+
+    observer?.observe(root);
+    window.addEventListener("resize", scheduleDraw);
+    scheduleDraw();
+    return () => {
+      cancelAnimationFrame(frame);
+      observer?.disconnect();
+      window.removeEventListener("resize", scheduleDraw);
+    };
+  }, [data, drawConnector]);
+
+  if (!f.confirmed) return null;
 
   return (
     <GateShell wide eyebrow={`Step 3 of 4 · ${f.confirmed.display_name}`} title="Review the options"
@@ -124,9 +182,16 @@ export default function Compare() {
       {rankError && <p className="error" role="alert">{rankError}</p>}
 
       {data && (
-        <div className="panels">
+        <div className="panels" ref={panelsRef}>
           <Panel kind="wait" items={data.wait_led} origin={f.origin} chosen={f.chosen} onChoose={f.setChosen} />
           <Panel kind="travel" items={data.travel_led} origin={f.origin} chosen={f.chosen} onChoose={f.setChosen} />
+          {connector && (
+            <svg className="selection-connector" viewBox={`0 0 ${connector.width} ${connector.height}`} preserveAspectRatio="none" aria-hidden="true">
+              <path d={connector.path} />
+              <circle cx={connector.x1} cy={connector.y1} r="3" />
+              <circle cx={connector.x2} cy={connector.y2} r="3" />
+            </svg>
+          )}
         </div>
       )}
     </GateShell>
