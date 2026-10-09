@@ -1,7 +1,6 @@
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useFlow } from "../state/FlowContext";
-import { useTheme } from "../state/ThemeContext";
 import { modeLabel } from "../lib/ui";
 
 const STEPS = [
@@ -12,8 +11,14 @@ const STEPS = [
 ];
 export const GATE_INDEX = { "/": 0, "/verify": 1, "/compare": 2, "/signoff": 3 };
 
-const Shield = () => (
-  <svg viewBox="0 0 24 24" fill="none"><path d="M12 3 4 7v5c0 4.4 3.2 7.6 8 9 4.8-1.4 8-4.6 8-9V7l-8-4Z" stroke="currentColor" strokeWidth="1.6"/><path d="M9.2 12.2 11 14l4-4.2" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"/></svg>
+const ReferralMark = () => (
+  <svg viewBox="0 0 36 36" fill="none" aria-hidden="true">
+    <path d="M5.75 4.75h13l6 6v20.5H5.75z" stroke="currentColor" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M18.75 4.75v6h6M9.75 15.25h9M9.75 19.25h6.5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+    <path d="M16.25 24.25h4.5c3.2 0 3.2-5 6.4-5h.9M20.75 24.25c3.2 0 3.2 5 6.4 5h.9" stroke="var(--accent)" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" />
+    <circle cx="29.5" cy="19.25" r="1.65" fill="var(--accent)" />
+    <circle cx="29.5" cy="29.25" r="1.65" fill="var(--accent)" />
+  </svg>
 );
 const Check = () => (
   <svg viewBox="0 0 24 24" fill="none"><path d="M5 12.5 10 17l9-9.5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/></svg>
@@ -22,7 +27,6 @@ const Check = () => (
 export default function Sidebar() {
   const location = useLocation();
   const f = useFlow();
-  const { theme, setTheme } = useTheme();
   const current = GATE_INDEX[location.pathname] ?? 0;
 
   // show the GP's own choices back to them on completed steps
@@ -35,7 +39,7 @@ export default function Sidebar() {
   return (
     <aside className="rail">
       <div className="brand">
-        <span className="mark"><Shield /></span>
+        <ReferralMark />
         <span className="wm"><b>Referral Options</b><span>Clinician advisory</span></span>
       </div>
 
@@ -61,12 +65,7 @@ export default function Sidebar() {
 
       <div className="rail-foot">
         <p className="assure"><b>Advisory only.</b> The GP decides. This tool never submits, books, or chooses a referral.</p>
-        <div className="toggle" role="radiogroup" aria-label="Theme">
-          {[["light", "Light"], ["dark", "Dark"], ["system", "Auto"]].map(([v, lbl]) => (
-            <button key={v} className={theme === v ? "on" : ""} role="radio"
-              aria-checked={theme === v} onClick={() => setTheme(v)}>{lbl}</button>
-          ))}
-        </div>
+        <p className="rail-note">Waiting times are estimates. Check each source and observation date.</p>
       </div>
     </aside>
   );

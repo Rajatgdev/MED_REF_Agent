@@ -114,7 +114,7 @@ export default function Compare() {
         <label className="ctl">Mode
           <select value={f.mode} onChange={(e) => f.setMode(e.target.value)}>
             <option value="driving">Driving</option>
-            <option value="transit">Public transport</option>
+            <option value="transit" disabled>Public transport — not available yet</option>
           </select>
         </label>
         {loading && <span className="hint">updating…</span>}
