@@ -336,3 +336,34 @@ a { color: var(--accent-deep); }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; transition-duration: .01ms !important; }
 }
+
+
+/* --- Auth --- */
+.auth-screen { display: flex; align-items: center; justify-content: center; min-height: 100vh; padding: 40px 20px; background: var(--canvas); }
+.auth-splash { color: var(--muted); font-size: 14px; }
+.auth { display: grid; grid-template-columns: 300px minmax(0, 1fr); width: min(840px, 100%); background: var(--paper); border: 1px solid var(--line); box-shadow: var(--shadow); }
+.auth-aside { display: flex; flex-direction: column; padding: 34px 28px 28px; background: #fbfcfb; border-right: 1px solid var(--line); }
+.auth-aside-lede { margin: 30px 0 0; color: var(--ink-soft); font-size: 13px; line-height: 1.6; }
+.auth-aside-foot { margin-top: auto; padding-top: 24px; border-top: 1px solid var(--line); color: var(--ink-soft); font-size: 11px; line-height: 1.55; }
+.auth-aside-foot b { color: var(--ink); font-weight: 650; }
+.auth-form { padding: 40px 42px 34px; }
+.auth-h1 { margin: 0 0 7px; color: var(--ink); font: 400 29px/1.12 var(--serif); letter-spacing: -.03em; }
+.auth-sub { margin: 0 0 24px; color: var(--ink-soft); font-size: 13.5px; }
+.auth-form .field { margin-bottom: 16px; }
+.row-between { display: flex; align-items: baseline; justify-content: space-between; margin-bottom: 7px; }
+.row-between label { margin: 0; }
+.auth-btn { width: 100%; margin-top: 8px; }
+.auth-toggle { margin: 20px 0 0; color: var(--muted); font-size: 12.5px; }
+.auth-toggle button { padding: 0; border: 0; background: none; color: var(--accent-deep); font: 650 12.5px var(--sans); cursor: pointer; }
+.auth-toggle button:hover { text-decoration: underline; }
+@media (max-width: 680px) {
+  .auth { grid-template-columns: 1fr; }
+  .auth-aside { display: none; }
+  .auth-form { padding: 32px 24px; }
+}
+
+/* sign-out in the rail */
+.rail-user { display: flex; align-items: center; justify-content: space-between; gap: 10px; margin-top: 2px; padding-top: 12px; border-top: 1px solid var(--line); }
+.rail-email { min-width: 0; overflow: hidden; color: var(--ink-soft); font-size: 11px; white-space: nowrap; text-overflow: ellipsis; }
+.rail-signout { flex: none; padding: 0; border: 0; background: none; color: var(--accent-deep); font: 650 11px var(--sans); cursor: pointer; }
+.rail-signout:hover { text-decoration: underline; }

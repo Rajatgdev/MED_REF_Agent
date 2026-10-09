@@ -1,6 +1,7 @@
 import { useLocation } from "react-router-dom";
 import { motion } from "framer-motion";
 import { useFlow } from "../state/FlowContext";
+import { useAuth } from "../state/AuthContext";
 import { modeLabel } from "../lib/ui";
 
 const STEPS = [
@@ -27,6 +28,7 @@ const Check = () => (
 export default function Sidebar() {
   const location = useLocation();
   const f = useFlow();
+  const { user, logout } = useAuth();
   const current = GATE_INDEX[location.pathname] ?? 0;
 
   // show the GP's own choices back to them on completed steps
@@ -66,6 +68,12 @@ export default function Sidebar() {
       <div className="rail-foot">
         <p className="assure"><b>Advisory only.</b> The GP decides. This tool never submits, books, or chooses a referral.</p>
         <p className="rail-note">Waiting times are estimates. Check each source and observation date.</p>
+        {user && (
+          <div className="rail-user">
+            <span className="rail-email" title={user.email}>{user.email}</span>
+            <button className="rail-signout" onClick={logout}>Sign out</button>
+          </div>
+        )}
       </div>
     </aside>
   );
