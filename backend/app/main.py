@@ -6,10 +6,12 @@ through Vercel functions or edge middleware. Vercel serves static assets only.
 """
 from contextlib import asynccontextmanager
 
-from fastapi import FastAPI
+from fastapi import Depends, FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy import text
 
+from app.auth.router import current_user
+from app.auth.router import router as auth_router
 from app.core.config import settings
 from app.db.session import SessionLocal
 from app.graph.checkpointer import open_checkpointer
@@ -47,9 +49,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-app.include_router(referrals.router)
-app.include_router(extract.router)
-app.include_router(flow.router)
+# Auth is open — you must reach signup/login/me without a session.
+app.include_router(auth_router)
+
+# Everything else needs a valid session cookie.
+_auth = [Depends(current_user)]
+app.include_router(referrals.router, dependencies=_auth)
+app.include_router(extract.router, dependencies=_auth)
+app.include_router(flow.router, dependencies=_auth)
 
 @app.get("/health")
 async def health():
